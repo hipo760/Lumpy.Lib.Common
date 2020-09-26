@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30516.212
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lumpy.Lib.Common", "Lumpy.Lib.Common\Lumpy.Lib.Common.csproj", "{2410D975-60A5-4FCA-8780-AD89CBF7C97A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2410D975-60A5-4FCA-8780-AD89CBF7C97A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2410D975-60A5-4FCA-8780-AD89CBF7C97A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2410D975-60A5-4FCA-8780-AD89CBF7C97A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2410D975-60A5-4FCA-8780-AD89CBF7C97A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C1BEBE5B-058A-4CDB-8B3D-DA649483633A}
+	EndGlobalSection
+EndGlobal
