@@ -24,5 +24,16 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "release":{
+    "branches": ["master", "next"],
+    "plugins":[
+      "@semantic-release/changelog",
+      "@semantic-release/git",
+      "@semantic-release/github"
+    ],
+    "repositoryUrl":"https://github.com/hipo760/Lumpy.Lib.Common.git",
+    "dryRun":"true",
+    "debug":"true"
   }
 }
