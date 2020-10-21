@@ -33,4 +33,3 @@ jobs:
           GH_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
         with:
           script-path: ./build.cake
-          verbosity: Diagnostic

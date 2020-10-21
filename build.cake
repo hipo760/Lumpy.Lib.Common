@@ -49,9 +49,9 @@ Task("Build")
     .IsDependentOn("Run dotnet --info")
     .IsDependentOn("Clean")
     .IsDependentOn("Get next semantic version number")
-    //.IsDependentOn("Build solution")
+    .IsDependentOn("Build solution")
     //.IsDependentOn("Run tests")
-    //.IsDependentOn("Package")
+    .IsDependentOn("Package")
     //.IsDependentOn("Release")
     ;
 
@@ -108,7 +108,7 @@ Task("Get next semantic version number")
 Task("Build solution")
     .Does(() =>
 {
-    var solutions = GetFiles("./src/*.sln");
+    var solutions = GetFiles("./*.sln");
     foreach(var solution in solutions)
     {
         Information("Building solution {0} v{1}", solution.GetFilenameWithoutExtension(), releaseVersion);
@@ -129,19 +129,19 @@ Task("Build solution")
     }
 });
 
-Task("Run tests")
-    .Does(() =>
-{
-    var xunitArgs = "-nobuild -configuration " + configuration;
+// Task("Run tests")
+//     .Does(() =>
+// {
+//     var xunitArgs = "-nobuild -configuration " + configuration;
 
-    var testProjects = GetFiles("./src/**/*.Tests.csproj");
-    foreach(var testProject in testProjects)
-    {
-        Information("Testing project {0} with args {1}", testProject.GetFilenameWithoutExtension(), xunitArgs);
+//     var testProjects = GetFiles("./src/**/*.Tests.csproj");
+//     foreach(var testProject in testProjects)
+//     {
+//         Information("Testing project {0} with args {1}", testProject.GetFilenameWithoutExtension(), xunitArgs);
 
-        DotNetCoreTool(testProject.FullPath, "xunit", xunitArgs);
-    }
-});
+//         DotNetCoreTool(testProject.FullPath, "xunit", xunitArgs);
+//     }
+// });
 
 Task("Package")
     .Does(() =>

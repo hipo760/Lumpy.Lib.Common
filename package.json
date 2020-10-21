@@ -33,7 +33,6 @@
       "@semantic-release/github"
     ],
     "repositoryUrl":"https://github.com/hipo760/Lumpy.Lib.Common.git",
-    "dryRun":"true",
     "debug":"true"
   }
 }
