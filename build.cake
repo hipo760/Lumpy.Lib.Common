@@ -16,14 +16,6 @@ var projectName = "Lumpy.Lib.Common";
 var releaseVersion = "0.0.0";
 var artifactsDir =  Directory("./artifacts");
 
-var isLocalBuild = BuildSystem.IsLocalBuild;
-var isRunningOnAppveyorMasterBranch = StringComparer.OrdinalIgnoreCase.Equals(
-    "master",
-    BuildSystem.AppVeyor.Environment.Repository.Branch
-);
-
-// We only attempt to release during an appveyor build caused by new commits to the master branch.
-var shouldRelease = !isLocalBuild && isRunningOnAppveyorMasterBranch;
 var changesDetectedSinceLastRelease = false;
 
 Action<NpxSettings> requiredSemanticVersionPackages = settings => settings
@@ -39,9 +31,6 @@ Action<NpxSettings> requiredSemanticVersionPackages = settings => settings
 Setup(context =>
 {
     Information(Figlet(projectName));
-    Information("Local build {0}", isLocalBuild);
-    Information("Running on appveyor master branch {0}", isRunningOnAppveyorMasterBranch);
-    Information("Should release {0}", shouldRelease);
 });
 
 Teardown(context =>
@@ -60,10 +49,10 @@ Task("Build")
     .IsDependentOn("Run dotnet --info")
     .IsDependentOn("Clean")
     .IsDependentOn("Get next semantic version number")
-    .IsDependentOn("Build solution")
+    //.IsDependentOn("Build solution")
     //.IsDependentOn("Run tests")
-    .IsDependentOn("Package")
-    .IsDependentOn("Release")
+    //.IsDependentOn("Package")
+    //.IsDependentOn("Release")
     ;
 
 Task("Run dotnet --info")
@@ -79,8 +68,8 @@ Task("Clean")
     Information("Cleaning {0}, bin and obj folders", artifactsDir);
 
     CleanDirectory(artifactsDir);
-    CleanDirectories("./src/**/bin");
-    CleanDirectories("./src/**/obj");
+    //CleanDirectories("./src/**/bin");
+    //CleanDirectories("./src/**/obj");
 });
 
 /*
