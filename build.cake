@@ -1,4 +1,4 @@
-﻿#addin "nuget:https://api.nuget.org/v3/index.json?package=Cake.Figlet&version=1.0.0"
+﻿#addin "Cake.Figlet"
 #addin "nuget:https://api.nuget.org/v3/index.json?package=Cake.Npx&version=1.0.0"
 
 ///////////////////////////////////////////////////////////////////////////////

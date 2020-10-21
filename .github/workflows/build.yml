@@ -26,8 +26,8 @@ jobs:
       - name: Run a one-line script
         run: echo Hello, world!
         
-      # - name: Cake Action
-      #   uses: cake-build/cake-action@v1
-      #   with:
-      #     script-path: ./build.cake
-      #     verbosity: Diagnostic
+      - name: Cake Action
+        uses: cake-build/cake-action@v1.2.0
+        with:
+          script-path: ./build.cake
+          verbosity: Diagnostic
