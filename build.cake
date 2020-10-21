@@ -84,7 +84,7 @@ NOTE: The environment variable will need to be set to pass the semantic-release 
 Explicitly setting the target will override the 'shouldRelease' condition
 */
 Task("Get next semantic version number")
-    .WithCriteria(shouldRelease || target == "Get next semantic version number" )
+    //.WithCriteria(shouldRelease || target == "Get next semantic version number" )
     .Does(() =>
 {
     Information("Running semantic-release in dry run mode to extract next semantic version number");
