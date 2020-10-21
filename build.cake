@@ -1,5 +1,5 @@
 ﻿#addin "Cake.Figlet"
-#addin "nuget:https://api.nuget.org/v3/index.json?package=Cake.Npx&version=1.0.0"
+#addin "nuget:https://api.nuget.org/v3/index.json?package=Cake.Npx&version=1.6.0"
 
 ///////////////////////////////////////////////////////////////////////////////
 // ARGUMENTS
