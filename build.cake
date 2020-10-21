@@ -169,7 +169,7 @@ Task("Package")
 });
 
 Task("Release")
-    .WithCriteria(shouldRelease)
+    //.WithCriteria(shouldRelease)
     // we need to lazily evaluate changesDetectedSinceLastRelease, // as it's value can change during the build
     .WithCriteria(() => changesDetectedSinceLastRelease)
     .Does(() =>
