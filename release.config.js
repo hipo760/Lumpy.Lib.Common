@@ -12,7 +12,7 @@ module.exports = {
         // Verifies the conditions for the plugins used below
         // For example verifying a GITHUB_TOKEN environment variable has been provided
         () => {
-            if (!process.env.GITHUB_TOKEN) {
+            if (!process.env.GH_TOKEN) {
                 throw new SemanticReleaseErrorc(
                     'The environment variable GITHUB_TOKEN is required.',
                     'ENOAPMTOKEN',
