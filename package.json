@@ -5,7 +5,8 @@
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {
-    "cz-conventional-changelog": "^3.3.0"
+    "cz-conventional-changelog": "^3.3.0",
+    "semantic-release": "^17.2.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -25,14 +26,17 @@
       "path": "./node_modules/cz-conventional-changelog"
     }
   },
-  "release":{
-    "branches": ["master", "next"],
-    "plugins":[
+  "release": {
+    "branches": [
+      "master)",
+      "next"
+    ],
+    "plugins": [
       "@semantic-release/changelog",
       "@semantic-release/git",
       "@semantic-release/github"
     ],
-    "repositoryUrl":"https://github.com/hipo760/Lumpy.Lib.Common.git",
-    "debug":"true"
+    "repositoryUrl": "https://github.com/hipo760/Lumpy.Lib.Common.git",
+    "debug": "true"
   }
 }
