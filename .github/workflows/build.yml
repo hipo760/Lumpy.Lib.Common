@@ -29,4 +29,5 @@ jobs:
       - name: Cake Action
         uses: cake-build/cake-action@v1.2.0
         with:
-          script-path: build.cake
+          script-path: ./build.cake
+          verbosity: Diagnostic
