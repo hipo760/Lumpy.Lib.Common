@@ -67,11 +67,11 @@ jobs:
         with:
           branch: master
           dry_run: false
-          # You can specify specifying version range for the extra plugins if you prefer.
-          extra_plugins: |
-            @semantic-release/changelog
-            @semantic-release/git
-            @semantic-release/github
+          # # You can specify specifying version range for the extra plugins if you prefer.
+          # extra_plugins: |
+          #   @semantic-release/changelog
+          #   @semantic-release/git
+          #   @semantic-release/github
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 
