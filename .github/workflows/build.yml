@@ -20,20 +20,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       
-      - name: Get semantic release version
-        uses: cycjimmy/semantic-release-action@v2
-        id: semantic_dry
-        with:
-          branch: master
-          dry_run: true
-          # You can specify specifying version range for the extra plugins if you prefer.
-          extra_plugins: |
-            @semantic-release/changelog
-            @semantic-release/git
-            @semantic-release/github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-          # NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # - name: Get semantic release version
+      #   uses: cycjimmy/semantic-release-action@v2
+      #   id: semantic_dry
+      #   with:
+      #     branch: master
+      #     dry_run: true
+      #     # You can specify specifying version range for the extra plugins if you prefer.
+      #     extra_plugins: |
+      #       @semantic-release/changelog
+      #       @semantic-release/git
+      #       @semantic-release/github
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+      #     # NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       
       
       
@@ -77,9 +77,9 @@ jobs:
       - name: Show semantic release info
         # if: steps.semantic.outputs.new_release_published == 'true'
         run: |
-          echo ${{ steps.semantic_dry.outputs.new_release_version }}
           echo ${{ steps.semantic.outputs.new_release_version }}
 
+      # echo ${{ steps.semantic_dry.outputs.new_release_version }}
       # - name: Package, publish and tag.
       #   id: publish_nuget
       #   uses: rohith/publish-nuget@v2
