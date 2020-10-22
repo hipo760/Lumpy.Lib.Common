@@ -1,5 +1,5 @@
 ﻿#addin "Cake.Figlet"
-#addin "nuget:https://api.nuget.org/v3/index.json?package=Cake.Npx&version=1.6.0"
+//#addin "nuget:https://api.nuget.org/v3/index.json?package=Cake.Npx&version=1.6.0"
 
 ///////////////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -15,14 +15,13 @@ var configuration = Argument<string>("configuration", "Release");
 var projectName = "Lumpy.Lib.Common";
 var releaseVersion = "0.0.0";
 var artifactsDir =  Directory("./artifacts");
+//var changesDetectedSinceLastRelease = false;
 
-var changesDetectedSinceLastRelease = false;
-
-Action<NpxSettings> requiredSemanticVersionPackages = settings => settings
-    .AddPackage("semantic-release@13.1.1")
-    .AddPackage("@semantic-release/changelog@1.0.0")
-    .AddPackage("@semantic-release/git@3.0.0")
-    .AddPackage("@semantic-release/exec@2.0.0");
+// Action<NpxSettings> requiredSemanticVersionPackages = settings => settings
+//     .AddPackage("semantic-release@13.1.1")
+//     .AddPackage("@semantic-release/changelog@1.0.0")
+//     .AddPackage("@semantic-release/git@3.0.0")
+//     .AddPackage("@semantic-release/exec@2.0.0");
 
 ///////////////////////////////////////////////////////////////////////////////
 // SETUP / TEARDOWN
@@ -31,6 +30,7 @@ Action<NpxSettings> requiredSemanticVersionPackages = settings => settings
 Setup(context =>
 {
     Information(Figlet(projectName));
+    Information(EnvironmentVariable<string>("NEW_RELEASE_VERSION", releaseVersion));
 });
 
 Teardown(context =>
@@ -48,11 +48,10 @@ Task("Default")
 Task("Build")
     .IsDependentOn("Run dotnet --info")
     .IsDependentOn("Clean")
-    .IsDependentOn("Get next semantic version number")
+    //.IsDependentOn("Get next semantic version number")
     .IsDependentOn("Build solution")
     //.IsDependentOn("Run tests")
     .IsDependentOn("Package")
-    //.IsDependentOn("Release")
     ;
 
 Task("Run dotnet --info")
@@ -83,27 +82,27 @@ To do this run the following locally:
 NOTE: The environment variable will need to be set to pass the semantic-release verify conditions
 Explicitly setting the target will override the 'shouldRelease' condition
 */
-Task("Get next semantic version number")
-    //.WithCriteria(shouldRelease || target == "Get next semantic version number" )
-    .Does(() =>
-{
-    Information("Running semantic-release in dry run mode to extract next semantic version number");
+// Task("Get next semantic version number")
+//     //.WithCriteria(shouldRelease || target == "Get next semantic version number" )
+//     .Does(() =>
+// {
+//     Information("Running semantic-release in dry run mode to extract next semantic version number");
 
-    string[] semanticReleaseOutput;
-    Npx("semantic-release", "--dry-run", requiredSemanticVersionPackages, out semanticReleaseOutput);
+//     string[] semanticReleaseOutput;
+//     Npx("semantic-release", "--dry-run", requiredSemanticVersionPackages, out semanticReleaseOutput);
 
-    Information(string.Join(Environment.NewLine, semanticReleaseOutput));
+//     Information(string.Join(Environment.NewLine, semanticReleaseOutput));
 
-    var nextSemanticVersionNumber = ExtractNextSemanticVersionNumber(semanticReleaseOutput);
+//     var nextSemanticVersionNumber = ExtractNextSemanticVersionNumber(semanticReleaseOutput);
 
-    if (nextSemanticVersionNumber == null) {
-        Warning("There are no relevant changes, skipping release");
-    } else {
-        Information("Next semantic version number is {0}", nextSemanticVersionNumber);
-        releaseVersion = nextSemanticVersionNumber;
-        changesDetectedSinceLastRelease = true;
-    }
-});
+//     if (nextSemanticVersionNumber == null) {
+//         Warning("There are no relevant changes, skipping release");
+//     } else {
+//         Information("Next semantic version number is {0}", nextSemanticVersionNumber);
+//         releaseVersion = nextSemanticVersionNumber;
+//         changesDetectedSinceLastRelease = true;
+//     }
+// });
 
 Task("Build solution")
     .Does(() =>
@@ -146,7 +145,7 @@ Task("Build solution")
 Task("Package")
     .Does(() =>
 {
-    var projects = GetFiles("./src/**/*.csproj");
+    var projects = GetFiles("./**/*.csproj");
     foreach(var project in projects)
     {
         var projectDirectory = project.GetDirectory().FullPath;
@@ -168,19 +167,6 @@ Task("Package")
     }
 });
 
-Task("Release")
-    //.WithCriteria(shouldRelease)
-    // we need to lazily evaluate changesDetectedSinceLastRelease, // as it's value can change during the build
-    .WithCriteria(() => changesDetectedSinceLastRelease)
-    .Does(() =>
-{
-    Information("Releasing v{0}", releaseVersion);
-    Information("Updating CHANGELOG.md");
-    Information("Creating github release");
-    Information("Pushing to NuGet");
-
-    Npx("semantic-release", requiredSemanticVersionPackages);
-});
 
 ///////////////////////////////////////////////////////////////////////////////
 // EXECUTION
@@ -192,12 +178,12 @@ RunTarget(target);
 // Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-string ExtractNextSemanticVersionNumber(string[] semanticReleaseOutput)
-{
-    var extractRegEx = new System.Text.RegularExpressions.Regex("^.+next release version is (?<SemanticVersionNumber>.*)$");
+// string ExtractNextSemanticVersionNumber(string[] semanticReleaseOutput)
+// {
+//     var extractRegEx = new System.Text.RegularExpressions.Regex("^.+next release version is (?<SemanticVersionNumber>.*)$");
 
-    return semanticReleaseOutput
-        .Select(line => extractRegEx.Match(line).Groups["SemanticVersionNumber"].Value)
-        .Where(line => !string.IsNullOrWhiteSpace(line))
-        .SingleOrDefault();
-}
+//     return semanticReleaseOutput
+//         .Select(line => extractRegEx.Match(line).Groups["SemanticVersionNumber"].Value)
+//         .Where(line => !string.IsNullOrWhiteSpace(line))
+//         .SingleOrDefault();
+// }

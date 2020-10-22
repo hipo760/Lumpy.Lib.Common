@@ -1,6 +1,5 @@
 # This is a basic workflow to help you get started with Actions
-
-name: CI
+name: Nuget package CI
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -20,7 +19,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Semantic Release
+      
+      - name: Get semantic release version
         uses: cycjimmy/semantic-release-action@v2
         id: semantic
         with:
@@ -32,20 +32,96 @@ jobs:
             @semantic-release/git
             @semantic-release/github
         env:
-          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
           # NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Do something when a new release published
+      
+      
+      
+      # -uses: actions/setup-dotnet@v1
+      #   with:
+      #     dotnet-version: '3.1.x' # SDK Version to use.
+      #   env:
+      #     NUGET_AUTH_TOKEN: ${{secrets.LUMPY_NUGET_TOKEN}}
+
+      # - name: Build the project.
+      #   if: steps.semantic.outputs.new_release_published == 'true'
+      #   run: |
+      #     dotnet restore
+      #     dotnet build
+      
+      # - name: Create the package
+      #   run: dotnet pack --configuration Release --output ./artifacts
+      
+      # - name: Publish the package to Nuget
+      #   run: dotnet nuget push ./artifacts/*.nupkg
+      
+      - name: Tag the branch
+        uses: mathieudutour/github-tag-action@v4.5
+        id: tagging
+        with:
+          github_token: ${{ secrets.GITHUB_PAT }}
+          dry_run: true
+
+      - name: Show semantic release info
         # if: steps.semantic.outputs.new_release_published == 'true'
         run: |
           echo ${{ steps.semantic.outputs.new_release_version }}
-          echo ${{ steps.semantic.outputs.new_release_major_version }}
-          echo ${{ steps.semantic.outputs.new_release_minor_version }}
-          echo ${{ steps.semantic.outputs.new_release_patch_version }}      
+          echo ${{ steps.tagging.outputs.new_tag }}
+          echo ${{ steps.tagging.outputs.new_version }}
+          echo ${{ steps.tagging.outputs.previous_tag }}
+          echo ${{ steps.tagging.outputs.changelog }}
+      # - name: Package, publish and tag.
+      #   id: publish_nuget
+      #   uses: rohith/publish-nuget@v2
+      #   with:
+      #     # Filepath of the project to be packaged, relative to root of repository
+      #     PROJECT_FILE_PATH: Core/Core.csproj
+          
+      #     # NuGet package id, used for version detection & defaults to project name
+      #     PACKAGE_NAME: Core
+          
+      #     # Filepath with version info, relative to root of repository & defaults to PROJECT_FILE_PATH
+      #     # VERSION_FILE_PATH: Directory.Build.props
 
-      - name: Cake Action
-        uses: cake-build/cake-action@v1.2.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
-          GH_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
-        with:
-          script-path: ./build.cake
+      #     # Regex pattern to extract version info in a capturing group
+      #     # VERSION_REGEX: ^\s*<Version>(.*)<\/Version>\s*$
+          
+      #     # Useful with external providers like Nerdbank.GitVersioning, ignores VERSION_FILE_PATH & VERSION_REGEX
+      #     VERSION_STATIC: ${{ steps.semantic.outputs.new_release_version }}
+
+      #     # Flag to toggle git tagging, enabled by default
+      #     TAG_COMMIT: false
+
+      #     # Format of the git tag, [*] gets replaced with actual version
+      #     #TAG_FORMAT: v*
+
+      #     # API key to authenticate with NuGet server
+      #     NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+
+      #     # NuGet server uri hosting the packages, defaults to https://api.nuget.org
+      #     NUGET_SOURCE: https://api.nuget.org
+
+      #     # Flag to toggle pushing symbols along with nuget package to the server, disabled by default
+      #     # INCLUDE_SYMBOLS: false
+      
+
+
+
+      # - name: Cake action
+      #   if: steps.semantic.outputs.new_release_published == 'true'
+      #   uses: cake-build/cake-action@v1.2.0
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+      #     GH_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+      #     NEW_RELEASE_VERSION: ${{ steps.semantic.outputs.new_release_version }}
+      #     NEW_RELEASE_MAJOR_VERSION: ${{ steps.semantic.outputs.new_release_major_version }}
+      #     NEW_RELEASE_MINOR_VERSION: ${{ steps.semantic.outputs.new_release_minor_version }}
+      #     NEW_RELEASE_PATCH_VERSION: ${{ steps.semantic.outputs.new_release_patch_version }}
+      #   with:
+      #     script-path: ./build.cake
+
+      # - name: Upload package artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: package-artifact
+      #     path: ./artifacts/
