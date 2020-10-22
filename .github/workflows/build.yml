@@ -136,7 +136,7 @@ jobs:
       #   with:
       #     name: package-artifact
       #     path: ./artifacts/
-  Tag version:
+  tag_version:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
