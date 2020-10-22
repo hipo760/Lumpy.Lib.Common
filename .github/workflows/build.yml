@@ -62,17 +62,17 @@ jobs:
       #     github_token: ${{ secrets.GH_PAT }}
       #     dry_run: true
       - name: Tag the branch
-      uses: cycjimmy/semantic-release-action@v2
-      id: semantic
-      with:
-        branch: master
-        # You can specify specifying version range for the extra plugins if you prefer.
-        extra_plugins: |
-          @semantic-release/changelog
-          @semantic-release/git
-          @semantic-release/github
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        uses: cycjimmy/semantic-release-action@v2
+        id: semantic
+        with:
+          branch: master
+          # You can specify specifying version range for the extra plugins if you prefer.
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+            @semantic-release/github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 
       - name: Show semantic release info
         # if: steps.semantic.outputs.new_release_published == 'true'
