@@ -15,13 +15,7 @@ var configuration = Argument<string>("configuration", "Release");
 var projectName = "Lumpy.Lib.Common";
 var releaseVersion = "0.0.0";
 var artifactsDir =  Directory("./artifacts");
-//var changesDetectedSinceLastRelease = false;
 
-// Action<NpxSettings> requiredSemanticVersionPackages = settings => settings
-//     .AddPackage("semantic-release@13.1.1")
-//     .AddPackage("@semantic-release/changelog@1.0.0")
-//     .AddPackage("@semantic-release/git@3.0.0")
-//     .AddPackage("@semantic-release/exec@2.0.0");
 
 ///////////////////////////////////////////////////////////////////////////////
 // SETUP / TEARDOWN
@@ -31,6 +25,7 @@ Setup(context =>
 {
     Information(Figlet(projectName));
     Information(EnvironmentVariable<string>("NEW_RELEASE_VERSION", releaseVersion));
+    releaseVersion = EnvironmentVariable<string>("NEW_RELEASE_VERSION", releaseVersion);
 });
 
 Teardown(context =>
@@ -67,42 +62,7 @@ Task("Clean")
     Information("Cleaning {0}, bin and obj folders", artifactsDir);
 
     CleanDirectory(artifactsDir);
-    //CleanDirectories("./src/**/bin");
-    //CleanDirectories("./src/**/obj");
 });
-
-/*
-Normally this task should only run based on the 'shouldRelease' condition,
-however sometimes you want to run this locally to preview the next sematic version
-number and changlelog.
-To do this run the following locally:
-> $env:NUGET_TOKEN="insert_token_here"
-> $env:GITHUB_TOKEN="insert_token_here"
-> .\build.ps1  -ScriptArgs '-target="Get next semantic version number"'
-NOTE: The environment variable will need to be set to pass the semantic-release verify conditions
-Explicitly setting the target will override the 'shouldRelease' condition
-*/
-// Task("Get next semantic version number")
-//     //.WithCriteria(shouldRelease || target == "Get next semantic version number" )
-//     .Does(() =>
-// {
-//     Information("Running semantic-release in dry run mode to extract next semantic version number");
-
-//     string[] semanticReleaseOutput;
-//     Npx("semantic-release", "--dry-run", requiredSemanticVersionPackages, out semanticReleaseOutput);
-
-//     Information(string.Join(Environment.NewLine, semanticReleaseOutput));
-
-//     var nextSemanticVersionNumber = ExtractNextSemanticVersionNumber(semanticReleaseOutput);
-
-//     if (nextSemanticVersionNumber == null) {
-//         Warning("There are no relevant changes, skipping release");
-//     } else {
-//         Information("Next semantic version number is {0}", nextSemanticVersionNumber);
-//         releaseVersion = nextSemanticVersionNumber;
-//         changesDetectedSinceLastRelease = true;
-//     }
-// });
 
 Task("Build solution")
     .Does(() =>
@@ -173,17 +133,3 @@ Task("Package")
 ///////////////////////////////////////////////////////////////////////////////
 
 RunTarget(target);
-
-///////////////////////////////////////////////////////////////////////////////
-// Helpers
-///////////////////////////////////////////////////////////////////////////////
-
-// string ExtractNextSemanticVersionNumber(string[] semanticReleaseOutput)
-// {
-//     var extractRegEx = new System.Text.RegularExpressions.Regex("^.+next release version is (?<SemanticVersionNumber>.*)$");
-
-//     return semanticReleaseOutput
-//         .Select(line => extractRegEx.Match(line).Groups["SemanticVersionNumber"].Value)
-//         .Where(line => !string.IsNullOrWhiteSpace(line))
-//         .SingleOrDefault();
-// }
