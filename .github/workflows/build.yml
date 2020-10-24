@@ -62,7 +62,7 @@ jobs:
         uses: cake-build/cake-action@v1.2.0
         env:
           NUGET_AUTH_TOKEN: ${{secrets.LUMPY_NUGET_TOKEN}}
-          NEW_RELEASE_VERSION: ${{ steps.semantic.outputs.new_release_version }}
+          NEW_RELEASE_VERSION: ${{ needs.check_version_number.outputs.new_release_version }}
         with:
           script-path: ./build.cake
 
