@@ -57,15 +57,15 @@ jobs:
       
       # - name: Publish the package to Nuget
       #   run: dotnet nuget push ./artifacts/*.nupkg
-      
+      - run: pwd
       - name: Cake action
         uses: cake-build/cake-action@v1.2.0
-        run: pwd
+        
         env:
           NEW_RELEASE_VERSION: ${{ needs.check_version_number.outputs.new_release_version }}
         with:
           script-path: ./build.cake
-      
+      - run: pwd
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         run: pwd
