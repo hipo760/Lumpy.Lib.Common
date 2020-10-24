@@ -61,14 +61,19 @@ jobs:
       - name: Cake action
         uses: cake-build/cake-action@v1.2.0
         env:
-          NUGET_AUTH_TOKEN: ${{secrets.LUMPY_NUGET_TOKEN}}
+          # NUGET_AUTH_TOKEN: ${{secrets.LUMPY_NUGET_TOKEN}}
           NEW_RELEASE_VERSION: ${{ needs.check_version_number.outputs.new_release_version }}
         with:
           script-path: ./build.cake
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: nuget-artifact
+          path: ./artifacts/*.nuget
 
   tag_version:
-    needs: build_package_push
-    #needs: check_version_number
+    needs: [build_package_push,check_version_number]
     if: needs.check_version_number.outputs.new_release_published == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -85,3 +90,20 @@ jobs:
             @semantic-release/github
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+  
+  push_to_nuget:
+    needs: [tag_version,check_version_number]
+    if: needs.check_version_number.outputs.new_release_published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: nuget-artifact
+    - name: Upload to nuget
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x' # SDK Version to use.
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.LUMPY_NUGET_TOKEN}}
+      run: dotnet nuget push ./*.nupkg
