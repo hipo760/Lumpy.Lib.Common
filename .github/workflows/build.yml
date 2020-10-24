@@ -33,43 +33,42 @@ jobs:
       new_release_published: ${{ steps.semantic_dry.outputs.new_release_published }}
       new_release_version: ${{ steps.semantic_dry.outputs.new_release_version }}
 
-  # build_package_push:
-  #   needs: check_version_number
-  #   if: needs.check_version_number.outputs.new_release_published == 'true'
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
+  build_package_push:
+    needs: check_version_number
+    if: needs.check_version_number.outputs.new_release_published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
       
-  #     # -uses: actions/setup-dotnet@v1
-  #     #   with:
-  #     #     dotnet-version: '3.1.x' # SDK Version to use.
-  #     #   env:
-  #     #     NUGET_AUTH_TOKEN: ${{secrets.LUMPY_NUGET_TOKEN}}
+      # -uses: actions/setup-dotnet@v1
+      #   with:
+      #     dotnet-version: '3.1.x' # SDK Version to use.
+      #   env:
+      #     NUGET_AUTH_TOKEN: ${{secrets.LUMPY_NUGET_TOKEN}}
 
-  #     # - name: Build the project.
-  #     #   run: |
-  #     #     dotnet restore
-  #     #     dotnet build
+      # - name: Build the project.
+      #   run: |
+      #     dotnet restore
+      #     dotnet build
       
-  #     # - name: Create the package
-  #     #   run: dotnet pack --configuration Release --output ./artifacts
+      # - name: Create the package
+      #   run: dotnet pack --configuration Release --output ./artifacts
       
-  #     # - name: Publish the package to Nuget
-  #     #   run: dotnet nuget push ./artifacts/*.nupkg
+      # - name: Publish the package to Nuget
+      #   run: dotnet nuget push ./artifacts/*.nupkg
       
-  #     - name: Cake action
-  #       if: steps.semantic.outputs.new_release_published == 'true'
-  #       uses: cake-build/cake-action@v1.2.0
-  #       env:
-  #         NUGET_AUTH_TOKEN: ${{secrets.LUMPY_NUGET_TOKEN}}
-  #         NEW_RELEASE_VERSION: ${{ steps.semantic.outputs.new_release_version }}
-  #       with:
-  #         script-path: ./build.cake
+      - name: Cake action
+        uses: cake-build/cake-action@v1.2.0
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.LUMPY_NUGET_TOKEN}}
+          NEW_RELEASE_VERSION: ${{ steps.semantic.outputs.new_release_version }}
+        with:
+          script-path: ./build.cake
 
   tag_version:
-    # needs: build_package_push
-    needs: check_version_number
+    needs: build_package_push
+    #needs: check_version_number
     if: needs.check_version_number.outputs.new_release_published == 'true'
     runs-on: ubuntu-latest
     steps:

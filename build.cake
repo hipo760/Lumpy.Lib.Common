@@ -24,8 +24,9 @@ var artifactsDir =  Directory("./artifacts");
 Setup(context =>
 {
     Information(Figlet(projectName));
-    Information(EnvironmentVariable<string>("NEW_RELEASE_VERSION", releaseVersion));
+    
     releaseVersion = EnvironmentVariable<string>("NEW_RELEASE_VERSION", releaseVersion);
+    Information("Version: {0}", releaseVersion);
 });
 
 Teardown(context =>
@@ -57,23 +58,20 @@ Task("Run dotnet --info")
 });
 
 Task("Clean")
-    .Does(() =>
-{
+    .Does(() => {
     Information("Cleaning {0}, bin and obj folders", artifactsDir);
-
     CleanDirectory(artifactsDir);
-});
+    });
 
 Task("Build solution")
-    .Does(() =>
-{
+    .Does(() => {
     var solutions = GetFiles("./*.sln");
     foreach(var solution in solutions)
     {
         Information("Building solution {0} v{1}", solution.GetFilenameWithoutExtension(), releaseVersion);
 
         var assemblyVersion = $"{releaseVersion}.0";
-
+        DotNetCoreRestore(solution.FullPath);
         DotNetCoreBuild(solution.FullPath, new DotNetCoreBuildSettings()
         {
             Configuration = configuration,
