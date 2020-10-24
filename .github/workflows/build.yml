@@ -69,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: nuget-artifact
-          path: $PWD/**/artifacts/*.nuget
+          path: ./**/*.nuget
           if-no-files-found: error
 
   tag_version:
