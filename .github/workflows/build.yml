@@ -106,4 +106,4 @@ jobs:
         dotnet-version: '3.1.x' # SDK Version to use.
       env:
         NUGET_AUTH_TOKEN: ${{secrets.LUMPY_NUGET_TOKEN}}
-      run: dotnet nuget push ./*.nupkg
+        run: dotnet nuget push ./*.nupkg
