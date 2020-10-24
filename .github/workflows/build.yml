@@ -70,7 +70,8 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: nuget-artifact
-          path: ./artifacts/*.nuget
+          path: ./**/artifacts/*.nuget
+          if-no-files-found: error
 
   tag_version:
     needs: [build_package_push,check_version_number]
