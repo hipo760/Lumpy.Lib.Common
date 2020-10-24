@@ -67,9 +67,10 @@ jobs:
       
       - name: Upload artifact
         uses: actions/upload-artifact@v2
+        run: echo $PWD
         with:
           name: nuget-artifact
-          path: ./**/artifacts/*.nuget
+          path: $PWD/artifacts/*.nuget
           if-no-files-found: error
 
   tag_version:
