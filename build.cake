@@ -14,7 +14,7 @@ var configuration = Argument<string>("configuration", "Release");
 
 var projectName = "Lumpy.Lib.Common";
 var releaseVersion = "0.0.0";
-var artifactsDir =  Directory("../../artifacts");
+var artifactsDir =  Directory("./artifacts");
 
 
 ///////////////////////////////////////////////////////////////////////////////
