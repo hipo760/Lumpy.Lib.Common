@@ -44,9 +44,10 @@ namespace Lumpy.Lib.Common
             return new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .Enrich.FromLogContext()
+                .Enrich.WithCaller()
                 .Enrich.WithThreadId().WriteTo.Async(a => a.Console(
                     LogEventLevel.Verbose,
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) {Message}{NewLine}{Exception}"))
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) {Caller} {Message}{NewLine}{Exception}"))
                 .CreateLogger();
         }
     }
