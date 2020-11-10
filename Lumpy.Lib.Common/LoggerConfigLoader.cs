@@ -9,6 +9,13 @@ namespace Lumpy.Lib.Common
         public ILogger Logger { get; set; }
         public IConfiguration Configuration { get; set; }
 
+        public static ILogger ConsoleLogger()
+        {
+            var loader = new LoggerConfigLoader();
+            return loader.Logger;
+        }
+
+
         public LoggerConfigLoader(string configFile = null)
         {
             if (string.IsNullOrEmpty(configFile))
@@ -47,7 +54,7 @@ namespace Lumpy.Lib.Common
                 .Enrich.WithCaller()
                 .Enrich.WithThreadId().WriteTo.Async(a => a.Console(
                     LogEventLevel.Verbose,
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) {Caller} {Message}{NewLine}{Exception}"))
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) [{Caller}] {Message}{NewLine}{Exception}"))
                 .CreateLogger();
         }
     }
