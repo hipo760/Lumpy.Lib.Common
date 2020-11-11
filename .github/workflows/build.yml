@@ -41,17 +41,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         
-      -uses: actions/setup-dotnet@v1
+      - name:  Setup dotnet
+        uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '5.0.x' # SDK Version to use.
-        # env:
-        #   NUGET_AUTH_TOKEN: ${{secrets.LUMPY_NUGET_TOKEN}}
-
-      - name: Build the project.
-        run: |
-          dotnet build --configuration Release -p:Version=${{ needs.check_version_number.outputs.new_release_version }}.0
+            dotnet-version: '5.0.x' # SDK Version to use.
       
-      - name: Create the package
+      - name: Build project
+        run: dotnet build --configuration Release -p:Version=${{ needs.check_version_number.outputs.new_release_version }}.0
+      
+      - name: Package
         run: dotnet pack --configuration Release --output ./artifacts
       
       # - name: Cake action
