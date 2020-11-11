@@ -50,7 +50,7 @@ jobs:
         run: dotnet build --configuration Release -p:Version=${{ needs.check_version_number.outputs.new_release_version }}.0
       
       - name: Package
-        run: dotnet pack --configuration Release --output ./artifacts
+        run: dotnet pack --configuration Release --output ./artifacts -p:PackageVersion=${{ needs.check_version_number.outputs.new_release_version }}
       
       # - name: Cake action
       #   uses: cake-build/cake-action@v1.2.0
