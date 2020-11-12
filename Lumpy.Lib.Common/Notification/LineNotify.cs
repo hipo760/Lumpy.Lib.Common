@@ -6,7 +6,7 @@ using System.Net.Http;
 
 namespace Lumpy.Lib.Common.Notification
 {
-    class LineNotify
+    public class LineNotify
     {
         private ILogger _log;
         private static readonly HttpClient Client = new HttpClient();

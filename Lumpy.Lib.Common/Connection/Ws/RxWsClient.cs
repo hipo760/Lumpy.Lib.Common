@@ -15,7 +15,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
         private ILogger _log;
         private ClientWebSocket _wsClient;
         protected CancellationTokenSource Cts;
-
+        public WebSocketState WebSocketState => _wsClient.State;
         private IDisposable _requestSub;
 
         public string RemoteUrl { get; set; }
