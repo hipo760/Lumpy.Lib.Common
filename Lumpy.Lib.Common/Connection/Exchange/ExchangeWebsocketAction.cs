@@ -12,18 +12,18 @@ namespace Lumpy.Lib.Common.Connection.Exchange
     {
         protected readonly ILogger Log;
         protected readonly RxWsClient RxWsClient;
+        protected Subject<long> HeartBeatEvent;
         protected ExchangeWebsocketAction(ILogger log,string exchangeHost)
         {
             Log = log;
             RxWsClient = new RxWsClient(log, exchangeHost);
-            HeartBeatEventBroker = new DataEventBroker<long>();
-            
+            HeartBeatEvent = new Subject<long>();
         }
         public Task Connect() => RxWsClient.Connect();
         public Task Disconnect() => RxWsClient.Disconnect();
         public virtual bool CheckConnection() => RxWsClient.WebSocketState != WebSocketState.Open;
-        public abstract Task Request(string request);
+        public void Request(string request) => RxWsClient.RequestBroker.OnNext(request);
         public IObservable<string> ResponseBroker => RxWsClient.ResponseBroker;
-        public IObservable<long> HeartBeatEventBroker { get; }
+        public IObservable<long> HeartBeatEventBroker => HeartBeatEvent;
     }
 }

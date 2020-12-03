@@ -8,7 +8,7 @@ namespace Lumpy.Lib.Common.Connection.Exchange
         Task Connect();
         Task Disconnect();
         bool CheckConnection();
-        Task Request(string request);
+        void Request(string request);
         IObservable<string> ResponseBroker { get; }
         IObservable<long> HeartBeatEventBroker { get; }
     }
