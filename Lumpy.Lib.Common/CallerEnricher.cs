@@ -28,7 +28,6 @@ namespace Lumpy.Lib.Common
                     logEvent.AddPropertyIfAbsent(new LogEventProperty("Caller", new ScalarValue(caller)));
                     return;
                 }
-
                 skip++;
             }
         }
