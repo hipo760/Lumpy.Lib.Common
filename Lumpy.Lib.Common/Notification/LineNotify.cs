@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 
 namespace Lumpy.Lib.Common.Notification
 {
@@ -20,6 +21,7 @@ namespace Lumpy.Lib.Common.Notification
         }
         public async void SendMessageAsync(string msg)
         {
+            var Cts = new CancellationTokenSource();
             try
             {
                 var values = new Dictionary<string, string>() { { "message", msg } };
@@ -33,11 +35,13 @@ namespace Lumpy.Lib.Common.Notification
                     },
                     Content = content
                 };
-                await Client.SendAsync(httpRequestMessage);
+                await Client.SendAsync(httpRequestMessage,Cts.Token);
             }
             catch (Exception e)
             {
                 _log.Error("[LineNotify.SendMessageAsync] Exception: {e}", e);
+                Cts.Cancel();
+                Cts.Dispose();
             }
         }
     }

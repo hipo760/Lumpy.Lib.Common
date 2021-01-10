@@ -69,7 +69,10 @@ namespace Lumpy.Lib.Common.Connection.Ws
                 //_log.Debug("Cancel token");
                 _log.Information("Disconnect...");
                 _requestSub?.Dispose();
-                _wsClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", Cts.Token).Wait();
+                if (_wsClient.State == WebSocketState.Open)
+                {
+                    _wsClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", Cts.Token).Wait();
+                }
                 Cts?.Cancel();
                 _wsClient?.Dispose();
                 _log.Information("Disconnect...Done");
@@ -78,9 +81,16 @@ namespace Lumpy.Lib.Common.Connection.Ws
         private async void Send(string request)
         {
             _log.Verbose("Send request: {request}",request);
-            var encoded = Encoding.UTF8.GetBytes(request);
-            var buffer = new ArraySegment<byte>(encoded, 0, encoded.Length);
-            await _wsClient.SendAsync(buffer, WebSocketMessageType.Text, true, Cts.Token);
+            try
+            {
+                var encoded = Encoding.UTF8.GetBytes(request);
+                var buffer = new ArraySegment<byte>(encoded, 0, encoded.Length);
+                await _wsClient.SendAsync(buffer, WebSocketMessageType.Text, true, Cts.Token);
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message);
+            }
         }
 
         private async Task Echo()
@@ -112,7 +122,6 @@ namespace Lumpy.Lib.Common.Connection.Ws
                     if (result.EndOfMessage)
                     {
                         var str = Encoding.UTF8.GetString(buffer, 0, offset);
-                        //TryParseAndPublish(str);
                         ResponseBroker.OnNext(str);
                         buffer = new byte[BufferSize];
                         offset = 0;
@@ -130,8 +139,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
             catch (Exception e)
             {
                 _log.Error("Exception: {e}", e.Message);
-                _log.Debug("CloseState: {state}", _wsClient.CloseStatus);
-                _log.Debug("CloseStateDescription: {state}", _wsClient.CloseStatusDescription);
+                _log.Debug("State: {state}", _wsClient.State);
                 ExceptionEvent?.Invoke(e);
             }
         }
