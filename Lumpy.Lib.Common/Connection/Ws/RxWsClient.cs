@@ -44,7 +44,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
                 var serverUri = new Uri(RemoteUrl);
                 Cts = new CancellationTokenSource();
                 _wsClient = new ClientWebSocket();
-                _wsClient.Options.RemoteCertificateValidationCallback += (sender, certificate, chain, errors) => true;
+                //_wsClient.Options.RemoteCertificateValidationCallback += (sender, certificate, chain, errors) => true;
                 _wsClient.ConnectAsync(serverUri, Cts.Token).Wait();
             }).ContinueWith(t =>
             {

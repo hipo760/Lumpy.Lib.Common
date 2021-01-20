@@ -21,7 +21,7 @@ namespace Lumpy.Lib.Common.Notification
         }
         public async void SendMessageAsync(string msg)
         {
-            var Cts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource();
             try
             {
                 var values = new Dictionary<string, string>() { { "message", msg } };
@@ -35,13 +35,13 @@ namespace Lumpy.Lib.Common.Notification
                     },
                     Content = content
                 };
-                await Client.SendAsync(httpRequestMessage,Cts.Token);
+                await Client.SendAsync(httpRequestMessage,cts.Token);
             }
             catch (Exception e)
             {
                 _log.Error("[LineNotify.SendMessageAsync] Exception: {e}", e);
-                Cts.Cancel();
-                Cts.Dispose();
+                cts.Cancel();
+                cts.Dispose();
             }
         }
     }
