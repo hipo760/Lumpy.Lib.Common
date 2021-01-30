@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-namespace Mc.StrategyPosition.Service.Broker
+namespace Lumpy.Lib.Common.Broker
 {
     public class ConcurrentQueueBroker<T>:IDisposable
     {

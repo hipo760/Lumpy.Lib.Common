@@ -107,7 +107,6 @@ namespace Lumpy.Lib.Common.Connection.Ws
                     var result = await _wsClient.ReceiveAsync(bytesReceived, CancellationToken.None);
 
 
-                    
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
                         _log.Information("result.MessageType: {MessageType}", result.MessageType);
