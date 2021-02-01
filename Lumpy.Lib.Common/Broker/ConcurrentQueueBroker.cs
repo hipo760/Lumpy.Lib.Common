@@ -40,10 +40,17 @@ namespace Lumpy.Lib.Common.Broker
         }
         public void Dispose()
         {
+
             _dataEvent.OnCompleted();
             _dequeueSub?.Dispose();
             _inputSub?.Dispose();
+#if NET5_0
             _eventQueue.Clear();
+#elif NETSTANDARD2_0
+            while (_eventQueue.TryDequeue(out var item)) { }
+#else
+#error This code block does not match csproj TargetFrameworks list
+#endif
         }
     }
 }

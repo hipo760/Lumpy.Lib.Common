@@ -13,7 +13,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
 {
     public class RxWsClient
     {
-        private readonly ILogger _log;
+        protected readonly ILogger _log;
         private ClientWebSocket _wsClient;
         protected CancellationTokenSource Cts;
         public WebSocketState WebSocketState => _wsClient.State;
@@ -48,6 +48,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
                 _wsClient.ConnectAsync(serverUri, Cts.Token).Wait();
             }).ContinueWith(t =>
             {
+#if NET5_0
                 if (t.IsCompletedSuccessfully)
                 {
                     _log.Information("Connecting...done, listing...");
@@ -61,6 +62,24 @@ namespace Lumpy.Lib.Common.Connection.Ws
                 {
                     _log.Error("Exception {e}", t.Exception.Message);
                 }
+#elif NETSTANDARD2_0
+                if (t.IsCompleted)
+                {
+                    _log.Information("Connecting...done, listing...");
+                    _requestSub = RequestBroker
+                        .SubscribeOn(NewThreadScheduler.Default)
+                        .Subscribe(Send);
+                    _log.Information("Ready for request.");
+                    Task.Run(Echo, Cts.Token);
+                }
+                else if (t.IsFaulted && t.Exception != null)
+                {
+                    _log.Error("Exception {e}", t.Exception.Message);
+                }
+#else
+#error This code block does not match csproj TargetFrameworks list
+#endif
+
             });
         }
         public virtual Task Disconnect() =>
@@ -143,4 +162,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
             }
         }
     }
+
+
+    
 }
