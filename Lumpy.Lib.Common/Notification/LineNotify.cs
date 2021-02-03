@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Security;
 using System.Threading;
 
 namespace Lumpy.Lib.Common.Notification
@@ -13,18 +14,20 @@ namespace Lumpy.Lib.Common.Notification
         private static readonly HttpClient Client = new HttpClient();
         public string Token { get; set; }
         public string Url { get; set; }
-        public LineNotify(string token, ILogger log, string url = "https://notify-api.line.me/api/notify")
+        private readonly string _prefixMsg;
+        public LineNotify(string token, ILogger log, string url = "https://notify-api.line.me/api/notify",string prefixMsg = "")
         {
             Url = url;
+            _prefixMsg = prefixMsg;
             Token = token;
-            _log = log;
+            _log = log; 
         }
         public async void SendMessageAsync(string msg)
         {
             var cts = new CancellationTokenSource();
             try
             {
-                var values = new Dictionary<string, string>() { { "message", msg } };
+                var values = new Dictionary<string, string>() { { "message", _prefixMsg + msg } };
                 var content = new FormUrlEncodedContent(values);
                 var httpRequestMessage = new HttpRequestMessage
                 {
