@@ -86,7 +86,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
                 else if (t.IsFaulted && t.Exception != null)
                 {
                     _log.Error("Exception {e}", t.Exception.Message);
-                    ExceptionEvent?.Invoke(t.Exception);
+                    _exceptionEvent.OnNext(t.Exception);
                 }
 #else
 #error This code block does not match csproj TargetFrameworks list
