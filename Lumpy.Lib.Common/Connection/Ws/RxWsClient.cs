@@ -22,12 +22,15 @@ namespace Lumpy.Lib.Common.Connection.Ws
         public string RemoteUrl { get; set; }
         public int BufferSize { get; }
         public Action<Exception> ExceptionEvent { get; set; }
+        public Action ConnectedEvent { get; }
+        public Action DisConnectedEvent { get; }
+
         public Subject<string> RequestBroker { get; }
         public Subject<string> ResponseBroker { get; }
 
-        public RxWsClient(ILogger log, string remote,int bufferSize = 1024)
+        public RxWsClient(string remote,int bufferSize = 1024)
         {
-            _log = log;
+            _log = Log.Logger;
             RemoteUrl = remote;
             BufferSize = bufferSize;
             _wsClient = new ClientWebSocket();
@@ -46,6 +49,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
                 _wsClient = new ClientWebSocket();
                 //_wsClient.Options.RemoteCertificateValidationCallback += (sender, certificate, chain, errors) => true;
                 _wsClient.ConnectAsync(serverUri, Cts.Token).Wait();
+                
             }).ContinueWith(t =>
             {
 #if NET5_0
@@ -57,10 +61,12 @@ namespace Lumpy.Lib.Common.Connection.Ws
                         .Subscribe(Send);
                     _log.Information("Ready for request.");
                     Task.Run(Echo, Cts.Token);
+                    ConnectedEvent?.Invoke();
                 }
                 else if (t.IsFaulted && t.Exception != null)
                 {
                     _log.Error("Exception {e}", t.Exception.Message);
+                    ExceptionEvent?.Invoke(t.Exception);
                 }
 #elif NETSTANDARD2_0
                 if (t.IsCompleted)
@@ -75,26 +81,35 @@ namespace Lumpy.Lib.Common.Connection.Ws
                 else if (t.IsFaulted && t.Exception != null)
                 {
                     _log.Error("Exception {e}", t.Exception.Message);
+                    ExceptionEvent?.Invoke(t.Exception);
                 }
 #else
 #error This code block does not match csproj TargetFrameworks list
 #endif
-
             });
         }
         public virtual Task Disconnect() =>
             Task.Run(() =>
             {
-                //_log.Debug("Cancel token");
-                _log.Information("Disconnect...");
-                _requestSub?.Dispose();
-                if (_wsClient.State == WebSocketState.Open)
+                try
                 {
-                    _wsClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", Cts.Token).Wait();
+                    _log.Information("Disconnect...");
+                    _requestSub?.Dispose();
+                    if (_wsClient.State == WebSocketState.Open)
+                    {
+                        _wsClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", Cts.Token).Wait();
+                    }
+                    Cts?.Cancel();
+                    _wsClient?.Dispose();
+                    _log.Information("Disconnect...Done");    //_log.Debug("Cancel token");
+                    DisConnectedEvent?.Invoke();
                 }
-                Cts?.Cancel();
-                _wsClient?.Dispose();
-                _log.Information("Disconnect...Done");
+                catch (Exception e)
+                {
+                    _log.Error("Exception {e}",e);
+                    ExceptionEvent?.Invoke(e);
+                }
+                
             });
 
         private async void Send(string request)
@@ -109,6 +124,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
             catch (Exception e)
             {
                 _log.Error(e.Message);
+                ExceptionEvent?.Invoke(e);
             }
         }
 

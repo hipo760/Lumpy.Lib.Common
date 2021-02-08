@@ -16,7 +16,7 @@ namespace Lumpy.Lib.Common.Connection.Exchange
         protected ExchangeWebsocketAction(ILogger log,string exchangeHost)
         {
             Log = log;
-            RxWsClient = new RxWsClient(log, exchangeHost);
+            RxWsClient = new RxWsClient(exchangeHost);
             HeartBeatEvent = new Subject<long>();
         }
         public Task Connect() => RxWsClient.Connect();
