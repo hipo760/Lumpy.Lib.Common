@@ -6,7 +6,6 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Lumpy.Lib.Common.Broker;
 using Serilog;
 
 namespace Lumpy.Lib.Common.Connection.Ws
@@ -18,12 +17,14 @@ namespace Lumpy.Lib.Common.Connection.Ws
         protected CancellationTokenSource Cts;
         public WebSocketState WebSocketState => _wsClient.State;
         private IDisposable _requestSub;
-
+        private readonly Subject<Exception> _exceptionEvent;
+        private readonly Subject<string> _connectionEvent;
         public string RemoteUrl { get; set; }
         public int BufferSize { get; }
-        public Action<Exception> ExceptionEvent { get; set; }
-        public Action ConnectedEvent { get; set; }
-        public Action DisConnectedEvent { get; set; }
+
+        public IObservable<Exception> ExceptionEvent => _exceptionEvent;
+        public IObservable<string> ConnectionEvent => _connectionEvent;
+        
 
         public Subject<string> RequestBroker { get; }
         public Subject<string> ResponseBroker { get; }
@@ -37,6 +38,9 @@ namespace Lumpy.Lib.Common.Connection.Ws
             Cts = new CancellationTokenSource();
             RequestBroker = new Subject<string>();
             ResponseBroker = new Subject<string>();
+
+            _exceptionEvent = new Subject<Exception>();
+            _connectionEvent = new Subject<string>();
         }
 
         public virtual Task Connect()
@@ -60,13 +64,13 @@ namespace Lumpy.Lib.Common.Connection.Ws
                         .SubscribeOn(NewThreadScheduler.Default)
                         .Subscribe(Send);
                     _log.Information("Ready for request.");
+                    _connectionEvent.OnNext("Connected");
                     Task.Run(Echo, Cts.Token);
-                    ConnectedEvent?.Invoke();
                 }
                 else if (t.IsFaulted && t.Exception != null)
                 {
                     _log.Error("Exception {e}", t.Exception.Message);
-                    ExceptionEvent?.Invoke(t.Exception);
+                    _exceptionEvent.OnNext(t.Exception);
                 }
 #elif NETSTANDARD2_0
                 if (t.IsCompleted)
@@ -76,6 +80,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
                         .SubscribeOn(NewThreadScheduler.Default)
                         .Subscribe(Send);
                     _log.Information("Ready for request.");
+                    _connectionEvent.OnNext("Connected");
                     Task.Run(Echo, Cts.Token);
                 }
                 else if (t.IsFaulted && t.Exception != null)
@@ -102,12 +107,12 @@ namespace Lumpy.Lib.Common.Connection.Ws
                     Cts?.Cancel();
                     _wsClient?.Dispose();
                     _log.Information("Disconnect...Done");    //_log.Debug("Cancel token");
-                    DisConnectedEvent?.Invoke();
+                    _connectionEvent.OnNext("Disconnected");
                 }
                 catch (Exception e)
                 {
                     _log.Error("Exception {e}",e);
-                    ExceptionEvent?.Invoke(e);
+                    _exceptionEvent.OnNext(e);
                 }
                 
             });
@@ -124,7 +129,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
             catch (Exception e)
             {
                 _log.Error(e.Message);
-                ExceptionEvent?.Invoke(e);
+                _exceptionEvent.OnNext(e);
             }
         }
 
@@ -174,7 +179,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
             {
                 _log.Error("Exception: {e}", e.Message);
                 _log.Debug("State: {state}", _wsClient.State);
-                ExceptionEvent?.Invoke(e);
+                _exceptionEvent.OnNext(e);
             }
         }
     }
