@@ -22,8 +22,8 @@ namespace Lumpy.Lib.Common.Connection.Ws
         public string RemoteUrl { get; set; }
         public int BufferSize { get; }
         public Action<Exception> ExceptionEvent { get; set; }
-        public Action ConnectedEvent { get; }
-        public Action DisConnectedEvent { get; }
+        public Action ConnectedEvent { get; set; }
+        public Action DisConnectedEvent { get; set; }
 
         public Subject<string> RequestBroker { get; }
         public Subject<string> ResponseBroker { get; }
