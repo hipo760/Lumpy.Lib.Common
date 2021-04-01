@@ -10,24 +10,24 @@ namespace Lumpy.Lib.Common.Notification
 {
     public class LineNotify
     {
-        private ILogger _log;
         private static readonly HttpClient Client = new HttpClient();
         public string Token { get; set; }
         public string Url { get; set; }
-        private readonly string _prefixMsg;
-        public LineNotify(string token, ILogger log, string url = "https://notify-api.line.me/api/notify",string prefixMsg = "")
+        public string PrefixMsg { get; set; }
+
+        public LineNotify(string token, string url = "https://notify-api.line.me/api/notify",string prefixMsg = "")
         {
             Url = url;
-            _prefixMsg = prefixMsg;
+            PrefixMsg = prefixMsg;
             Token = token;
-            _log = log; 
+            
         }
         public async void SendMessageAsync(string msg)
         {
             var cts = new CancellationTokenSource();
             try
             {
-                var values = new Dictionary<string, string>() { { "message", _prefixMsg + msg } };
+                var values = new Dictionary<string, string>() { { "message", PrefixMsg + msg } };
                 var content = new FormUrlEncodedContent(values);
                 var httpRequestMessage = new HttpRequestMessage
                 {
@@ -42,7 +42,7 @@ namespace Lumpy.Lib.Common.Notification
             }
             catch (Exception e)
             {
-                _log.Error("[LineNotify.SendMessageAsync] Exception: {e}", e);
+                Log.Logger.Error("[LineNotify.SendMessageAsync] Exception: {e}", e);
                 cts.Cancel();
                 cts.Dispose();
             }
