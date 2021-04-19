@@ -114,7 +114,7 @@ namespace Lumpy.Lib.Common.Connection.Tcp
                         } while (ns.DataAvailable);
 
                         if (!dataEvent.Any()) continue;
-                        _responseBroker.Publish(dataEvent);
+                        _responseBroker.OnNext(dataEvent);
                         completeArray = new byte[0];
                     }
                 }
