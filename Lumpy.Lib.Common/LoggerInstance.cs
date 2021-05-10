@@ -8,7 +8,14 @@ namespace Lumpy.Lib.Common
     public static class LoggerInstance
     {
         public static ILogger ConsoleLogger() => ConsoleLoggerConfiguration().CreateLogger();
-        public static ILogger FileLogger(string logFilePath) => FileLoggerConfiguration(logFilePath).CreateLogger();
+
+        public static ILogger FileLogger(
+            string logFilePath
+            , LogEventLevel level = LogEventLevel.Verbose
+            , string template = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) [{Caller}] {Message}{NewLine}{Exception}"
+            ) 
+            => FileLoggerConfiguration(logFilePath,level,template).CreateLogger();
+
         public static ILogger ConfiguredLogger(IConfiguration loggerConfiguration)
         {
             return loggerConfiguration == null
@@ -47,9 +54,6 @@ namespace Lumpy.Lib.Common
                         "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) [{Caller}] {Message}{NewLine}{Exception}");
                 });
 
-
-
-
         public static LoggerConfiguration ConsoleLoggerConfiguration() =>
             new LoggerConfiguration()
                 .MinimumLevel.Verbose()
@@ -59,8 +63,12 @@ namespace Lumpy.Lib.Common
                     LogEventLevel.Verbose,
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) [{Caller}] {Message}{NewLine}{Exception}"));
 
-        public static LoggerConfiguration FileLoggerConfiguration(string logFilePath, LogEventLevel level = LogEventLevel.Verbose) =>
-            string.IsNullOrEmpty(logFilePath) || string.IsNullOrWhiteSpace(logFilePath)
+        public static LoggerConfiguration FileLoggerConfiguration(
+            string logFilePath
+            , LogEventLevel level = LogEventLevel.Verbose
+            , string template = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) [{Caller}] {Message}{NewLine}{Exception}"
+            ) 
+            => string.IsNullOrEmpty(logFilePath) || string.IsNullOrWhiteSpace(logFilePath)
                 ? throw new ArgumentNullException(nameof(logFilePath))
                 : new LoggerConfiguration()
                     .MinimumLevel.Verbose()
@@ -74,11 +82,7 @@ namespace Lumpy.Lib.Common
                             logFilePath,
                             level,
                             rollingInterval: RollingInterval.Day,
-                            outputTemplate:
-                            "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) [{Caller}] {Message}{NewLine}{Exception}");
+                            outputTemplate: template);
                     });
-
-
-
     }
 }
