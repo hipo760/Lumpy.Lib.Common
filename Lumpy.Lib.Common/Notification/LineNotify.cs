@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,17 +10,17 @@ namespace Lumpy.Lib.Common.Notification
 {
     public class LineNotify
     {
-        private static readonly HttpClient Client = new(){Timeout = TimeSpan.FromSeconds(20)};
+        private static HttpClient _client;
         public string Token { get; set; }
         public string Url { get; set; }
         public string PrefixMsg { get; set; }
 
-        public LineNotify(string token, string url = "https://notify-api.line.me/api/notify",string prefixMsg = "")
+        public LineNotify(string token, string url = "https://notify-api.line.me/api/notify",string prefixMsg = "", int httpClientTimeoutSec = 30)
         {
             Url = url;
             PrefixMsg = prefixMsg;
             Token = token;
-            
+            _client = new HttpClient() { Timeout = TimeSpan.FromSeconds(httpClientTimeoutSec) };
         }
         public async Task SendMessageAsync(string msg)
         {
@@ -39,7 +38,7 @@ namespace Lumpy.Lib.Common.Notification
                     },
                     Content = content
                 };
-                await Client.SendAsync(httpRequestMessage,cts.Token);
+                await _client.SendAsync(httpRequestMessage,cts.Token);
             }
             catch (Exception e)
             {
