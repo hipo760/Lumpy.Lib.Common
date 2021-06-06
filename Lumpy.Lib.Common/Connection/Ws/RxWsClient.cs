@@ -12,32 +12,34 @@ namespace Lumpy.Lib.Common.Connection.Ws
 {
     public class RxWsClient
     {
-        protected readonly ILogger _log;
+        protected readonly ILogger Log;
+        
         private ClientWebSocket _wsClient;
         protected CancellationTokenSource Cts;
-        public WebSocketState WebSocketState => _wsClient.State;
-        private IDisposable _requestSub;
         private readonly Subject<Exception> _exceptionEvent;
         private readonly Subject<string> _connectionEvent;
-        public string RemoteUrl { get; set; }
-        public int BufferSize { get; }
+        private IDisposable _requestSub;
+        private readonly Subject<string> _requestBroker;
+        private Subject<string> _responseBroker;
 
         public IObservable<Exception> ExceptionEvent => _exceptionEvent;
         public IObservable<string> ConnectionEvent => _connectionEvent;
-        
+        public IObserver<string> RequestBroker => _requestBroker;
+        public IObservable<string> ResponseBroker => _responseBroker;
+        public WebSocketState WebSocketState => _wsClient.State;
+        public string RemoteUrl { get; set; }
+        public int BufferSize { get; }
 
-        public Subject<string> RequestBroker { get; }
-        public Subject<string> ResponseBroker { get; }
 
-        public RxWsClient(string remote,int bufferSize = 1024)
+        public RxWsClient(string remote, int bufferSize = 1024)
         {
-            _log = Log.Logger;
+            Log = Serilog.Log.Logger;
             RemoteUrl = remote;
             BufferSize = bufferSize;
             _wsClient = new ClientWebSocket();
             Cts = new CancellationTokenSource();
-            RequestBroker = new Subject<string>();
-            ResponseBroker = new Subject<string>();
+            _requestBroker = new Subject<string>();
+            _responseBroker = new Subject<string>();
 
             _exceptionEvent = new Subject<Exception>();
             _connectionEvent = new Subject<string>();
@@ -45,7 +47,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
 
         public virtual Task Connect()
         {
-            _log.Information("Connecting...");
+            Log.Information("Connecting...");
             return Task.Run(() =>
             {
                 var serverUri = new Uri(RemoteUrl);
@@ -59,17 +61,17 @@ namespace Lumpy.Lib.Common.Connection.Ws
 #if NET5_0
                 if (t.IsCompletedSuccessfully)
                 {
-                    _log.Information("Connecting...done, listing...");
-                    _requestSub = RequestBroker
+                    Log.Information("Connecting...done, listing...");
+                    _requestSub = _requestBroker
                         .SubscribeOn(NewThreadScheduler.Default)
                         .Subscribe(Send);
-                    _log.Information("Ready for request.");
+                    Log.Information("Ready for request.");
                     _connectionEvent.OnNext("Connected");
                     Task.Run(Echo, Cts.Token);
                 }
                 else if (t.IsFaulted && t.Exception != null)
                 {
-                    _log.Error("Exception {e}", t.Exception.Message);
+                    Log.Error("Exception {e}", t.Exception.Message);
                     _exceptionEvent.OnNext(t.Exception);
                 }
 #elif NETSTANDARD2_0
@@ -98,7 +100,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
             {
                 try
                 {
-                    _log.Information("Disconnect...");
+                    Log.Information("Disconnect...");
                     _requestSub?.Dispose();
                     if (_wsClient.State == WebSocketState.Open)
                     {
@@ -106,12 +108,12 @@ namespace Lumpy.Lib.Common.Connection.Ws
                     }
                     Cts?.Cancel();
                     _wsClient?.Dispose();
-                    _log.Information("Disconnect...Done");    //_log.Debug("Cancel token");
+                    Log.Information("Disconnect...Done");    //_log.Debug("Cancel token");
                     _connectionEvent.OnNext("Disconnected");
                 }
                 catch (Exception e)
                 {
-                    _log.Error("Exception {e}",e);
+                    Log.Error("Exception {e}",e);
                     _exceptionEvent.OnNext(e);
                 }
                 
@@ -119,7 +121,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
 
         private async void Send(string request)
         {
-            _log.Verbose("Send request: {request}",request);
+            //if (_isLogRequestResponse) _log.Verbose("Send request: {request}", request);
             try
             {
                 var encoded = Encoding.UTF8.GetBytes(request);
@@ -128,7 +130,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
             }
             catch (Exception e)
             {
-                _log.Error(e.Message);
+                Log.Error(e.Message);
                 _exceptionEvent.OnNext(e);
             }
         }
@@ -149,8 +151,8 @@ namespace Lumpy.Lib.Common.Connection.Ws
 
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
-                        _log.Information("result.MessageType: {MessageType}", result.MessageType);
-                        _log.Information("Websocket close, stop listing.");
+                        Log.Information("result.MessageType: {MessageType}", result.MessageType);
+                        Log.Information("Websocket close, stop listing.");
                         break;
                     }
                     
@@ -161,7 +163,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
                     if (result.EndOfMessage)
                     {
                         var str = Encoding.UTF8.GetString(buffer, 0, offset);
-                        ResponseBroker.OnNext(str);
+                        _responseBroker.OnNext(str);
                         buffer = new byte[BufferSize];
                         offset = 0;
                         free = buffer.Length;
@@ -177,8 +179,8 @@ namespace Lumpy.Lib.Common.Connection.Ws
             }
             catch (Exception e)
             {
-                _log.Error("Exception: {e}", e.Message);
-                _log.Debug("State: {state}", _wsClient.State);
+                Log.Error("Exception: {e}", e.Message);
+                Log.Debug("State: {state}", _wsClient.State);
                 _exceptionEvent.OnNext(e);
             }
         }

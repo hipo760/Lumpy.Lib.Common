@@ -5,12 +5,13 @@ using System.Net;
 using System.Net.Http;
 using System.Security;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Lumpy.Lib.Common.Notification
 {
     public class LineNotify
     {
-        private static readonly HttpClient Client = new HttpClient();
+        private static readonly HttpClient Client = new(){Timeout = TimeSpan.FromSeconds(20)};
         public string Token { get; set; }
         public string Url { get; set; }
         public string PrefixMsg { get; set; }
@@ -22,7 +23,7 @@ namespace Lumpy.Lib.Common.Notification
             Token = token;
             
         }
-        public async void SendMessageAsync(string msg)
+        public async Task SendMessageAsync(string msg)
         {
             var cts = new CancellationTokenSource();
             try

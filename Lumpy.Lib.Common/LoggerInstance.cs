@@ -13,6 +13,7 @@ namespace Lumpy.Lib.Common
             string logFilePath
             , LogEventLevel level = LogEventLevel.Verbose
             , string template = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) [{Caller}] {Message}{NewLine}{Exception}"
+            , int retainedFileCountLimit = 10
             ) 
             => FileLoggerConfiguration(logFilePath,level,template).CreateLogger();
 
@@ -67,6 +68,7 @@ namespace Lumpy.Lib.Common
             string logFilePath
             , LogEventLevel level = LogEventLevel.Verbose
             , string template = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) [{Caller}] {Message}{NewLine}{Exception}"
+            , int retainedFileCountLimit = 10
             ) 
             => string.IsNullOrEmpty(logFilePath) || string.IsNullOrWhiteSpace(logFilePath)
                 ? throw new ArgumentNullException(nameof(logFilePath))
@@ -82,6 +84,7 @@ namespace Lumpy.Lib.Common
                             logFilePath,
                             level,
                             rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit:retainedFileCountLimit,
                             outputTemplate: template);
                     });
     }
