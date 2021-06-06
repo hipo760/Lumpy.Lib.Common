@@ -78,7 +78,8 @@ namespace Lumpy.Lib.Common.Connection.Ws
                 if (t.IsCompleted)
                 {
                     Log.Information("Connecting...done, listing...");
-                    _requestSub = RequestBroker
+                    _requestSub = _requestBroker
+                        .SubscribeOn(NewThreadScheduler.Default)
                         .Subscribe(Send);
                     Log.Information("Ready for request.");
                     _connectionEvent.OnNext("Connected");
