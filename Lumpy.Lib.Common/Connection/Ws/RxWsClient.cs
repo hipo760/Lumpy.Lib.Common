@@ -77,17 +77,17 @@ namespace Lumpy.Lib.Common.Connection.Ws
 #elif NETSTANDARD2_0
                 if (t.IsCompleted)
                 {
-                    _log.Information("Connecting...done, listing...");
+                    Log.Information("Connecting...done, listing...");
                     _requestSub = RequestBroker
                         .SubscribeOn(NewThreadScheduler.Default)
                         .Subscribe(Send);
-                    _log.Information("Ready for request.");
+                    Log.Information("Ready for request.");
                     _connectionEvent.OnNext("Connected");
                     Task.Run(Echo, Cts.Token);
                 }
                 else if (t.IsFaulted && t.Exception != null)
                 {
-                    _log.Error("Exception {e}", t.Exception.Message);
+                    Log.Error("Exception {e}", t.Exception.Message);
                     _exceptionEvent.OnNext(t.Exception);
                 }
 #else
