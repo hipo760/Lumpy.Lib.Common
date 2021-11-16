@@ -89,7 +89,7 @@ namespace Lumpy.Lib.Common.Connection.Ws
                     {
                         if (t.Exception != null)
                         {
-                            _log.LogError("Exception: {e}", t.Exception);
+                            _log.Error("Exception: {e}", t.Exception);
                             _exceptionSubject.OnNext(t.Exception);
                         }
                     }
