@@ -27,34 +27,6 @@ namespace Lumpy.Lib.Common
                     .CreateLogger();
         }
 
-
-        public static LoggerConfiguration ConsoleFileLoggerConfiguration(
-            string logFilePath,
-            LogEventLevel consoleLogLevel = LogEventLevel.Verbose,
-            LogEventLevel fileLogLevel = LogEventLevel.Verbose
-        ) =>
-            new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .Enrich.FromLogContext()
-                .Enrich.WithCaller()
-                .Enrich.WithThreadId()
-                .WriteTo
-                .Async(a => 
-                    a.Console(
-                        consoleLogLevel,
-                    outputTemplate:
-                    "{Timestamp:yyyy-MM-dd HH:mm:ss zzz} {Message}{NewLine}{Exception}"))
-                .WriteTo
-                .Async(a =>
-                {
-                    a.File(
-                        logFilePath,
-                        fileLogLevel,
-                        rollingInterval: RollingInterval.Day,
-                        outputTemplate:
-                        "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({ThreadId}) [{Caller}] {Message}{NewLine}{Exception}");
-                });
-
         public static LoggerConfiguration ConsoleLoggerConfiguration() =>
             new LoggerConfiguration()
                 .MinimumLevel.Verbose()

@@ -7,163 +7,172 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
+using Serilog.Core;
 
 namespace Lumpy.Lib.Common.Connection.Ws
 {
     public class RxWsClient
     {
-        protected readonly ILogger Log;
-        
-        private ClientWebSocket _wsClient;
-        protected CancellationTokenSource Cts;
-        private readonly Subject<Exception> _exceptionEvent;
-        private readonly Subject<string> _connectionEvent;
-        private IDisposable _requestSub;
-        private readonly Subject<string> _requestBroker;
-        private Subject<string> _responseBroker;
+        private readonly ILogger _log;
+        private ClientWebSocket WsClient { get; set; }
+        private CancellationTokenSource _cts;
 
-        public IObservable<Exception> ExceptionEvent => _exceptionEvent;
-        public IObservable<string> ConnectionEvent => _connectionEvent;
-        public IObserver<string> RequestBroker => _requestBroker;
-        public IObservable<string> ResponseBroker => _responseBroker;
-        public WebSocketState WebSocketState => _wsClient.State;
+        private readonly Subject<WebSocketState> _websocketStateObservable;
+        private readonly Subject<Exception> _exceptionSubject;
+        private readonly Subject<string> _requestSubject;
+        private readonly Subject<string> _responseSubject;
+
+        private IDisposable _requestSub;
+
+
+        public IObservable<WebSocketState> WebsocketStateObservable => _websocketStateObservable;
+        public IObservable<Exception> ExceptionObservable => _exceptionSubject;
+        public IObserver<string> RequestObserver => _requestSubject;
+        public IObservable<string> ResponseObservable => _responseSubject;
+        public WebSocketState WebSocketState => WsClient.State;
         public string RemoteUrl { get; set; }
         public int BufferSize { get; }
 
-
-        public RxWsClient(string remote, int bufferSize = 1024)
+        public RxWsClient(string remote, int bufferSize = 1024, ILogger log = null)
         {
-            Log = Serilog.Log.Logger;
+            _log = log ?? Logger.None;
             RemoteUrl = remote;
             BufferSize = bufferSize;
-            _wsClient = new ClientWebSocket();
-            Cts = new CancellationTokenSource();
-            _requestBroker = new Subject<string>();
-            _responseBroker = new Subject<string>();
 
-            _exceptionEvent = new Subject<Exception>();
-            _connectionEvent = new Subject<string>();
+            _requestSubject = new Subject<string>();
+            _responseSubject = new Subject<string>();
+            _websocketStateObservable = new Subject<WebSocketState>();
+            _exceptionSubject = new Subject<Exception>();
         }
 
-        public virtual Task Connect()
+        public void Connect() => ConnectAsync().Wait();
+
+        public async Task ConnectAsync()
         {
-            Log.Information("Connecting...");
-            return Task.Run(() =>
-            {
-                var serverUri = new Uri(RemoteUrl);
-                Cts = new CancellationTokenSource();
-                _wsClient = new ClientWebSocket();
-                //_wsClient.Options.RemoteCertificateValidationCallback += (sender, certificate, chain, errors) => true;
-                _wsClient.ConnectAsync(serverUri, Cts.Token).Wait();
-                
-            }).ContinueWith(t =>
-            {
-#if NET5_0
-                if (t.IsCompletedSuccessfully)
+
+            WsClient = new ClientWebSocket();
+            var serverUri = new Uri(RemoteUrl);
+            _cts = new CancellationTokenSource();
+            await WsClient
+                .ConnectAsync(serverUri, _cts.Token)
+                .ContinueWith(async t =>
                 {
-                    Log.Information("Connecting...done, listing...");
-                    _requestSub = _requestBroker
-                        .SubscribeOn(NewThreadScheduler.Default)
-                        .Subscribe(Send);
-                    Log.Information("Ready for request.");
-                    _connectionEvent.OnNext("Connected");
-                    Task.Run(Echo, Cts.Token);
-                }
-                else if (t.IsFaulted && t.Exception != null)
-                {
-                    Log.Error("Exception {e}", t.Exception.Message);
-                    _exceptionEvent.OnNext(t.Exception);
-                }
+#if NET5_0_OR_GREATER
+                    if (t.IsCompletedSuccessfully)
+                    {
+                        _log.Information("Connecting...done");
+                        _websocketStateObservable.OnNext(WebSocketState);
+                        if (WebSocketState == WebSocketState.Open)
+                        {
+                            await Echo();
+                        }
+                    }
+                    else if (t.IsFaulted || t.IsCanceled || t.IsCompleted)
+                    {
+                        if (t.Exception != null)
+                        {
+                            _log.Error("Exception: {e}", t.Exception);
+                            _exceptionSubject.OnNext(t.Exception);
+                        }
+                        _websocketStateObservable.OnNext(WebSocketState);
+                    }
+
 #elif NETSTANDARD2_0
-                if (t.IsCompleted)
-                {
-                    Log.Information("Connecting...done, listing...");
-                    _requestSub = _requestBroker
-                        .SubscribeOn(NewThreadScheduler.Default)
-                        .Subscribe(Send);
-                    Log.Information("Ready for request.");
-                    _connectionEvent.OnNext("Connected");
-                    Task.Run(Echo, Cts.Token);
-                }
-                else if (t.IsFaulted && t.Exception != null)
-                {
-                    Log.Error("Exception {e}", t.Exception.Message);
-                    _exceptionEvent.OnNext(t.Exception);
-                }
+                    if (t.IsCompleted)
+	                {
+                        if (WebSocketState == WebSocketState.Open)
+                            {
+                                await Echo();
+                            }
+	                }
+                    else if (t.IsFaulted || t.IsCanceled)
+                    {
+                        if (t.Exception != null)
+                        {
+                            _log.LogError("Exception: {e}", t.Exception);
+                            _exceptionSubject.OnNext(t.Exception);
+                        }
+                    }
+                    _websocketStateObservable.OnNext(WebSocketState);    
 #else
 #error This code block does not match csproj TargetFrameworks list
 #endif
-            });
-        }
-        public virtual Task Disconnect() =>
-            Task.Run(() =>
-            {
-                try
-                {
-                    Log.Information("Disconnect...");
-                    _requestSub?.Dispose();
-                    if (_wsClient.State == WebSocketState.Open)
-                    {
-                        _wsClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", Cts.Token).Wait();
-                    }
-                    Cts?.Cancel();
-                    _wsClient?.Dispose();
-                    Log.Information("Disconnect...Done");    //_log.Debug("Cancel token");
-                    _connectionEvent.OnNext("Disconnected");
-                }
-                catch (Exception e)
-                {
-                    Log.Error("Exception {e}",e);
-                    _exceptionEvent.OnNext(e);
-                }
-                
-            });
+                });
 
-        private async void Send(string request)
+            //if (WebSocketState == WebSocketState.Open)
+            //{
+            //    await Echo();
+            //}
+        }
+
+        public void Close() => CloseAsync().Wait();
+
+        public async Task CloseAsync()
+        {
+            try
+            {
+                if (WebSocketState != WebSocketState.Open) return;
+                _requestSub?.Dispose();
+                _cts.Cancel();
+                await WsClient.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+
+            }
+            catch (Exception e)
+            {
+                _log.Error("Exception: {e}", e);
+                _exceptionSubject.OnNext(e);
+            }
+        }
+
+        private async Task Send(string request)
         {
             //if (_isLogRequestResponse) _log.Verbose("Send request: {request}", request);
             try
             {
                 var encoded = Encoding.UTF8.GetBytes(request);
                 var buffer = new ArraySegment<byte>(encoded, 0, encoded.Length);
-                await _wsClient.SendAsync(buffer, WebSocketMessageType.Text, true, Cts.Token);
+                await WsClient.SendAsync(buffer, WebSocketMessageType.Text, true, _cts.Token);
             }
             catch (Exception e)
             {
-                Log.Error(e.Message);
-                _exceptionEvent.OnNext(e);
+                _log.Error("Exception: {e}", e);
+                _exceptionSubject.OnNext(e);
             }
         }
 
         private async Task Echo()
         {
+            _requestSub?.Dispose();
+            _requestSub = _requestSubject
+                .Where(m => WebSocketState == WebSocketState.Open)
+                .Select(m => Observable.FromAsync(() => Send(m)))
+                .Concat()
+                .Subscribe();
+
             try
             {
                 var buffer = new byte[BufferSize];
                 var offset = 0;
                 var free = buffer.Length;
 
-                while (_wsClient.State == WebSocketState.Open)
+                while (WebSocketState == WebSocketState.Open || WebSocketState == WebSocketState.CloseSent)
                 {
                     var bytesReceived = new ArraySegment<byte>(buffer, offset, free);
-                    var result = await _wsClient.ReceiveAsync(bytesReceived, CancellationToken.None);
-
+                    var result = await WsClient.ReceiveAsync(bytesReceived, CancellationToken.None);
 
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
-                        Log.Information("result.MessageType: {MessageType}", result.MessageType);
-                        Log.Information("Websocket close, stop listing.");
+                        _log.Information("A receive has completed because a close message was received.");
                         break;
                     }
-                    
-                    
+
                     offset += result.Count;
                     free -= result.Count;
 
                     if (result.EndOfMessage)
                     {
                         var str = Encoding.UTF8.GetString(buffer, 0, offset);
-                        _responseBroker.OnNext(str);
+                        _responseSubject.OnNext(str);
                         buffer = new byte[BufferSize];
                         offset = 0;
                         free = buffer.Length;
@@ -176,16 +185,15 @@ namespace Lumpy.Lib.Common.Connection.Ws
                     buffer = newBuffer;
                     free = buffer.Length - offset;
                 }
+                _websocketStateObservable.OnNext(WebSocketState);
             }
             catch (Exception e)
             {
-                Log.Error("Exception: {e}", e.Message);
-                Log.Debug("State: {state}", _wsClient.State);
-                _exceptionEvent.OnNext(e);
+                _log.Error("Exception: {e}", e);
+                _log.Debug("State: {state}", WebSocketState);
+                _websocketStateObservable.OnNext(WebSocketState);
+                _exceptionSubject.OnNext(e);
             }
         }
     }
-
-
-    
 }
